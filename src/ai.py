@@ -50,7 +50,7 @@ class AI_Pipe:
             try:
                 print(latest.decode(), end="")
             except UnicodeDecodeError:
-                print("□")
+                print("□", end="")
             sys.stdout.flush()
             yield latest
 
