@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 from config import Config, get_config
 from typing import Final, Iterator
@@ -21,9 +22,9 @@ class AI_Pipe:
         )
         self.get_response()
 
-    def read(self) -> str:
+    def read(self) -> bytes:
         assert self.p.stdout, "`stdout` is None. The pipe did not open properly."
-        return self.p.stdout.read(1).decode()
+        return self.p.stdout.read(1)
 
     def write(self, s: bytes) -> None:
         assert self.p.stdin, "`stdin` is None. The pipe did not open properly."
@@ -35,7 +36,7 @@ class AI_Pipe:
         if message:
             self.write(message.encode())
         response_chunks = list(self.read_until_prompt())
-        response = "".join(response_chunks).strip()
+        response = b"".join(response_chunks).decode().strip()
 
         # These codes control the color of the text when printed in a terminal
         # but they will just clutter the response
@@ -44,9 +45,13 @@ class AI_Pipe:
 
         return response
 
-    def read_until_prompt(self) -> Iterator[str]:
-        while (latest := self.read()) != PROMPT:
-            print(latest, end="")
+    def read_until_prompt(self) -> Iterator[bytes]:
+        while (latest := self.read()) != bytes(PROMPT, "utf-8"):
+            try:
+                print(latest.decode(), end="")
+            except UnicodeDecodeError as e:
+                print(e)
+            sys.stdout.flush()
             yield latest
 
 

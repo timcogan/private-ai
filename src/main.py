@@ -17,6 +17,7 @@ def main() -> None:
         for message in get_messages(config):
             print(message)
             if message.sender not in config.number_whitelist:
+                print(ERROR_MESSAGE)
                 send_message(config, ERROR_MESSAGE, message.sender)
             elif message.body:
                 response = ai_pipe.get_response(message.body)
