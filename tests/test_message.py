@@ -30,11 +30,19 @@ Sent by unidentified/sealed sender
 Message timestamp: XXXXXXXXXXXXX (YYYY-MM-DDTHH:MM:SS.SSSZ)
 Body: Should I pick up a pizza?
 With profile key
+
+Envelope from: “Unknown” AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE (device: 1) to +1XXXYYYZZZZ
+Timestamp: XXXXXXXXXXXXX (YYYY-MM-DDTHH:MM:SS.SSSZ)
+Server timestamps: received: XXXXXXXXXXXXX (YYYY-MM-DDTHH:MM:SS.SSSZ) delivered: XXXXXXXXXXXXX (YYYY-MM-DDTHH:MM:SS.SSSZ)
+Message timestamp: XXXXXXXXXXXXX (YYYY-MM-DDTHH:MM:SS.SSSZ)
+Body: Who is this?
+With profile key
 """
 
 EXPECTED_MESSAGES: Final[List[Message]] = [
     Message("+19876543210", "This is a test"),
     Message("+430123456789", "Should I pick up a pizza?"),
+    Message("AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", "Who is this?"),
     Message("+12223334444", ""),
 ]
 
