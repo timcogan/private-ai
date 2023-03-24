@@ -2,10 +2,7 @@ import subprocess
 import sys
 
 from config import Config, get_config
-from typing import Final, Iterator
-
-
-PROMPT: Final[str] = ">"
+from typing import Iterator
 
 
 class AI_Pipe:
@@ -45,12 +42,15 @@ class AI_Pipe:
 
         return response
 
-    def read_until_prompt(self) -> Iterator[bytes]:
-        while (latest := self.read()) != bytes(PROMPT, "utf-8"):
+    def read_until_prompt(self, prompt: bytes = b"\n> ") -> Iterator[bytes]:
+        buffer = b"".join(self.read() for _ in range(3))
+        while buffer != prompt:
+            latest = buffer[:1]
+            buffer = buffer[1:] + self.read()
             try:
                 print(latest.decode(), end="")
-            except UnicodeDecodeError as e:
-                print(e)
+            except UnicodeDecodeError:
+                print("□")
             sys.stdout.flush()
             yield latest
 
@@ -58,9 +58,9 @@ class AI_Pipe:
 def main() -> None:
     ai_pipe = AI_Pipe(get_config())
     while True:
-        text = input(PROMPT + " ")
+        text = input("> ")
         response = ai_pipe.get_response(text)
-        print(f"AI response: `{response}`")
+        print(f"\nAI response: `{response}`")
 
 
 if __name__ == "__main__":
