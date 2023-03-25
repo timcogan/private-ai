@@ -12,7 +12,7 @@ class Config(NamedTuple):
     number_whitelist: List[str]
     # TODO The following should probably be Path objects instead of strings
     ai_cli_path: str = "tools/alpaca.cpp/chat"
-    ai_model_path: str = "tools/alpaca.cpp/models/7B/ggml-model-q4_0.bin"
+    ai_model_size: str = "7B"
     signal_cli_path: str = "tools/signal-cli/signal-cli-0.11.7/bin/signal-cli"
 
     @classmethod
