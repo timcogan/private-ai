@@ -17,10 +17,11 @@ def main() -> None:
         for message in get_messages(config):
             print(message)
             if message.sender not in config.number_whitelist:
+                print(ERROR_MESSAGE)
                 send_message(config, ERROR_MESSAGE, message.sender)
             elif message.body:
                 response = ai_pipe.get_response(message.body)
-                print(repr(response))
+                print("\r\n" + repr(response))
                 send_message(config, response, message.sender)
 
         time.sleep(5)  # We don't want to poll the Signal API too fast

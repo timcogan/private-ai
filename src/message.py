@@ -5,12 +5,12 @@ from config import Config, get_config
 from typing import Final, Iterator, List, NamedTuple
 
 
-SENDER_TEMPLATE: Final[str] = r"(?P<sender>\+\d+) \(device:"
+SENDER_TEMPLATE: Final[str] = r"(?P<sender>\S+) \(device:"
 NEWLINE_TEMPLATE: Final[str] = r".+\n"
 BODY_TEMPLATE: Final[str] = r"Body: (?P<body>.*)"
 
-MESSAGE_PATTERN: Final[re.Pattern] = re.compile(SENDER_TEMPLATE + NEWLINE_TEMPLATE * 5 + BODY_TEMPLATE)
-RECEIPT_PATTERN: Final[re.Pattern] = re.compile(SENDER_TEMPLATE + NEWLINE_TEMPLATE * 4 + "Received a receipt message")
+MESSAGE_PATTERN: Final[re.Pattern] = re.compile(SENDER_TEMPLATE + NEWLINE_TEMPLATE * 4 + BODY_TEMPLATE)
+RECEIPT_PATTERN: Final[re.Pattern] = re.compile(SENDER_TEMPLATE + NEWLINE_TEMPLATE * 3 + "Received a receipt message")
 
 
 class Message(NamedTuple):
@@ -54,6 +54,10 @@ def get_messages(config: Config) -> List[Message]:
 
 
 def parse_messages(text: str) -> Iterator[Message]:
+    # This line is present for some senders, but we don't care about it
+    # and we want all messages to come across in the same format
+    text = text.replace("Sent by unidentified/sealed sender\n", "")
+
     for match in MESSAGE_PATTERN.findall(text):
         message = Message(*match)
         yield message
