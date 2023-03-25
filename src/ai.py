@@ -1,15 +1,38 @@
+import os
 import subprocess
 import sys
 
 from config import Config, get_config
+from pathlib import Path
 from typing import Iterator
+
+
+def download_model(model_destination: Path, model_url: Path) -> None:
+    for p in list(model_destination.parents)[:2]:
+        p.mkdir(exist_ok=True)
+    wd = os.getcwd()
+    os.chdir(str(model_destination.parent))
+    cmd = ["curl", "-L", "-O", model_url]
+    subprocess.run(cmd)
+    os.chdir(wd)
+
+
+def get_model_path(config: Config) -> str:
+    model_folder = Path(config.ai_cli_path).parent / "models" / config.ai_model_size
+    model_url = Path(f"https://huggingface.co/Pi3141/alpaca-{config.ai_model_size}-ggml/resolve/main/ggml-model-q4_0.bin")
+    model_path = model_folder / model_url.name
+
+    if not model_path.exists():
+        download_model(model_path, model_url)
+    
+    return str(model_path)
 
 
 class AI_Pipe:
     p: subprocess.Popen
 
     def __init__(self, config: Config) -> None:
-        cmd = [config.ai_cli_path, "-m", config.ai_model_path]
+        cmd = [config.ai_cli_path, "-m", get_model_path(config)]
         print("Starting AI process with command: " + " ".join(cmd))
         self.p = subprocess.Popen(
             cmd,
