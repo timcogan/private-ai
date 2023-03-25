@@ -43,7 +43,7 @@ class AI_Pipe:
         return response
 
     def read_until_prompt(self, prompt: bytes = b"\n> ") -> Iterator[bytes]:
-        buffer = b"".join(self.read() for _ in range(3))
+        buffer = b"".join(self.read() for _ in range(len(prompt)))
         while buffer != prompt:
             latest = buffer[:1]
             buffer = buffer[1:] + self.read()
