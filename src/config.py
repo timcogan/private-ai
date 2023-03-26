@@ -8,18 +8,22 @@ CONFIG_FILE_PATH: Final[Path] = Path("config.json")
 
 
 class Config(NamedTuple):
-    ai_number: str
-    number_whitelist: List[str]
+    ai_number: str = ""
+    number_whitelist: List[str] = []
     # TODO The following should probably be Path objects instead of strings
     ai_cli_path: str = "tools/alpaca.cpp/chat"
     ai_model_size: str = "7B"
     signal_cli_path: str = "tools/signal-cli/signal-cli-0.11.7/bin/signal-cli"
+    max_len_output: int = 512
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":
         with open(path) as f:
-            dictionary = json.load(f)
-            return cls(**dictionary)
+            config_dictionary = cls()._asdict()
+            # Use the config.json file to override Config defaults
+            for k, v in json.load(f).items():
+                config_dictionary[k] = v
+            return cls(**config_dictionary)
 
     def save(self, path: Path) -> None:
         dictionary = self._asdict()
@@ -36,7 +40,7 @@ def get_config() -> Config:
             "What is your personal phone number that you will use to message the AI? (E.g., +1XXXYYYZZZZ) "
         )
         ai_number = input("What is the number that the AI will be messaging with? (E.g., +1XXXYYYZZZZ) ")
-        config = Config(ai_number, [whitelist_number])
+        config = Config(ai_number=ai_number, number_whitelist=[whitelist_number])
         config.save(CONFIG_FILE_PATH)
 
     return config

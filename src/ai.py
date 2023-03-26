@@ -5,7 +5,7 @@ import sys
 
 from config import Config, get_config
 from pathlib import Path
-from typing import Iterator
+from typing import Final
 
 
 def download_model(model_destination: Path, model_url: Path) -> None:
@@ -33,6 +33,7 @@ def get_model_path(config: Config) -> str:
 
 class AI_Pipe:
     p: subprocess.Popen
+    max_len_output: int = -1
 
     def __init__(self, config: Config) -> None:
         cmd = [config.ai_cli_path, "-m", get_model_path(config)]
@@ -43,7 +44,9 @@ class AI_Pipe:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        self.get_response()
+        # Read/print all of the startup text before configuring max_len_output
+        self.read_until_prompt()
+        self.max_len_output = config.max_len_output
 
     def read(self) -> bytes:
         assert self.p.stdout, "`stdout` is None. The pipe did not open properly."
@@ -59,11 +62,9 @@ class AI_Pipe:
         assert self.p.stdin, "`stdin` is None. The pipe did not open properly."
         self.p.send_signal(signal.SIGINT)  # Tell the AI to stop generating output
 
-    def get_response(self, message: str = "") -> str:
-        if message:
-            self.write(message.encode())
-        response_chunks = list(self.read_until_prompt())
-        response = b"".join(response_chunks).decode().strip()
+    def get_response(self, message: str) -> str:
+        self.write(message.encode())
+        response = self.read_until_prompt().decode().strip()
 
         # These codes control the color of the text when printed in a terminal
         # but they will just clutter the response
@@ -72,21 +73,29 @@ class AI_Pipe:
 
         return response
 
-    def read_until_prompt(self, prompt: bytes = b"\n> ") -> Iterator[bytes]:
+    def read_until_prompt(self, prompt: bytes = b"\n> ") -> bytes:
+        response = b""
         buffer = b"".join(self.read() for _ in range(len(prompt)))
+
         while buffer != prompt:
-            latest = buffer[:1]
+            response += buffer[:1]
             buffer = buffer[1:] + self.read()
-            if check_squirrely_behavior(buffer):
+
+            # Sometimes the AI will repeat itself forever
+            # "This is a poem about... This is a poem about... This is a..."
+            output_is_too_long = False if self.max_len_output < 0 else len(response) > self.max_len_output
+
+            if check_squirrely_behavior(buffer) or output_is_too_long:
                 self.cancel_output()
                 while buffer != prompt:  # Clear buffer so we don't cancel output multiple times
                     buffer = buffer[1:] + self.read()
             try:
-                print(latest.decode(), end="")
+                print(response[-1:].decode(), end="")
             except UnicodeDecodeError:
                 print("□", end="")
             sys.stdout.flush()
-            yield latest
+
+        return response
 
 
 def check_squirrely_behavior(b: bytes) -> bool:
