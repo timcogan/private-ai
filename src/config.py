@@ -31,9 +31,9 @@ class Config(NamedTuple):
             json.dump(dictionary, f, indent=4)
 
 
-def get_config() -> Config:
-    if CONFIG_FILE_PATH.is_file():
-        config = Config.from_file(CONFIG_FILE_PATH)
+def get_config(config_file_path: Path = CONFIG_FILE_PATH) -> Config:
+    if config_file_path.is_file():
+        config = Config.from_file(config_file_path)
     else:
         # TODO The user input should be verified
         whitelist_number = input(
@@ -41,7 +41,7 @@ def get_config() -> Config:
         )
         ai_number = input("What is the number that the AI will be messaging with? (E.g., +1XXXYYYZZZZ) ")
         config = Config(ai_number=ai_number, number_whitelist=[whitelist_number])
-        config.save(CONFIG_FILE_PATH)
+        config.save(config_file_path)
 
     return config
 
